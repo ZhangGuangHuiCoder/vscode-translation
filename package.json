@@ -1,0 +1,82 @@
+{
+  "name": "translation-auto",
+  "displayName": "中英互译",
+  "description": "中英互译快捷键 ctrl+n",
+  "version": "0.1.0",
+  "publisher": "ZhangGuangHuiCoder",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZhangGuangHuiCoder"
+  },
+  "scripts": {
+    "watch": "tsc -watch -p .",
+    "build": "tsc -p .&& vsce package",
+    "push": "vsce package&&vsce publish"
+  },
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "when": "editorHasSelection",
+        "command": "extension.translate",
+        "title": "中英互译"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "extension.translate",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "extension.translate",
+        "key": "ctrl+n",
+        "mac": "cmd+n",
+        "when": "editorHasSelection"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "中英互译",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "小驼峰",
+              "大驼峰",
+              "下划线",
+              "中划线",
+              "常量",
+              "交互选择"
+            ],
+            "default": "交互选择",
+            "description": "默认风格"
+          }
+        }
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "~22.19.9",
+    "@types/vscode": "^1.109.0",
+    "@vscode/vsce": "3.7.1",
+    "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@vscode/vsce-sign",
+      "keytar"
+    ]
+  }
+}
