@@ -10,16 +10,20 @@ function debounce<T extends (...args: any[]) => any>(func: T, delay: number): (.
     timer = setTimeout(() => func.apply(this, args), delay);
   };
 }
+// 只保留空格、字母、中文
+function filterAlphaChineseAndSpace(str: string) {
+  return str.replace(/[^a-zA-Z\u4e00-\u9fa5\s]/g, " ").trim();
+}
 /* 单词分割拼接 */
 async function worldSplit(str: string) {
-  const words = str.toLowerCase().split(" ");
+  if (/[^\u0000-\u00ff]/.test(str)) return str; //中文翻译直接返回
+  const words = filterAlphaChineseAndSpace(str).toLowerCase().split(" ");
   if (words.length <= 1) return words[0];
   const formatters: Record<string, () => string> = {
     小驼峰: () => words.map((v, i) => (i ? v[0].toUpperCase() + v.slice(1) : v)).join(""),
     大驼峰: () => words.map((v) => v[0].toUpperCase() + v.slice(1)).join(""),
-    下划线: () => words.join("_"),
-    中划线: () => words.join("-"),
     常量: () => words.map((v) => v.toUpperCase()).join("_"),
+    仅翻译: () => str,
   };
   const format = workspace.getConfiguration().get<string>("format") || "小驼峰";
   if (formatters[format]) return formatters[format]();

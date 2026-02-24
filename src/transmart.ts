@@ -1,4 +1,4 @@
-import { Memento, StatusBarAlignment, window } from "vscode";
+import { Memento, StatusBarAlignment, window, workspace } from "vscode";
 
 let globalState: Memento;
 const status = window.createStatusBarItem(StatusBarAlignment.Left);
@@ -15,10 +15,7 @@ async function GetBingTokenKey() {
   await new Promise((r) => setTimeout(r, 100));
   console.log("GetBingTokenKey", globalState.get<BingToken>("bing"));
 }
-// 只保留空格、字母、中文
-function filterAlphaChineseAndSpace(str: string) {
-  return str.replace(/[^a-zA-Z\u4e00-\u9fa5\s]/g, " ").trim();
-}
+
 async function bing(en2zh: boolean, str: string) {
   const bing = globalState.get<BingToken>("bing")!;
   if (!bing || bing.time < Date.now()) await GetBingTokenKey();
@@ -33,10 +30,10 @@ async function bing(en2zh: boolean, str: string) {
   const options = { method: "POST", headers, body };
   const url = "https://cn.bing.com/ttranslatev3?isVertical=1&IG=14AAE98EE9E34FF8BAEEED779058B2D3&IID=translator.5029";
   const result = (await (await fetch(url, options)).json()) as [{ translations: [{ text: string; to: "en" }]; usedLLM: true }];
-  return filterAlphaChineseAndSpace(result[0].translations[0].text);
+  return result[0].translations[0].text;
 }
 
-async function qq(en2zh: boolean, str: string) {
+async function tencent(en2zh: boolean, str: string) {
   const rs = await fetch("https://transmart.qq.com/api/imt", {
     body: JSON.stringify({
       header: { fn: "auto_translation", client_key: "browser 1-1" },
@@ -51,21 +48,23 @@ async function qq(en2zh: boolean, str: string) {
   });
   //@ts-ignore
   const { auto_translation } = await rs.json();
-  return filterAlphaChineseAndSpace(auto_translation[0].trim());
+  return auto_translation[0].trim();
 }
-
 /* 网络翻译 */
 async function netTranslate(str: string) {
-  if (str.length == 0) return "";
-  console.log("联网翻译." + str);
+  if (str.length < 1 || str.length > 50) return "";
   try {
     status.text = "$(pulse) " + str;
     status.show();
-    const en2zh = /^\w+$/.test(str);
+    const en2zh = /^[\u0000-\u00ff]+$/.test(str);
+    console.log(en2zh ? "英文转中文" : "中文转英文", str);
+    const engine = workspace.getConfiguration().get<string>("engine") || "tencent";
+    const primary = engine === "tencent" ? tencent : bing;
+    const fallback = engine === "tencent" ? bing : tencent;
     try {
-      return await qq(en2zh, str);
+      return await primary(en2zh, str);
     } catch {
-      return await bing(en2zh, str);
+      return await fallback(en2zh, str);
     }
   } catch {
     status.text = "网络翻译异常";

@@ -2,7 +2,7 @@
   "name": "translation-auto",
   "displayName": "中英互译",
   "description": "中英互译快捷键 ctrl+n",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "ZhangGuangHuiCoder",
   "repository": {
     "type": "git",
@@ -55,20 +55,28 @@
             "enum": [
               "小驼峰",
               "大驼峰",
-              "下划线",
-              "中划线",
               "常量",
+              "仅翻译",
               "交互选择"
             ],
             "default": "交互选择",
             "description": "默认风格"
+          },
+          "engine": {
+            "type": "string",
+            "enum": [
+              "bing",
+              "tencent"
+            ],
+            "default": "bing",
+            "description": "翻译引擎"
           }
         }
       }
     ]
   },
   "devDependencies": {
-    "@types/node": "~22.19.9",
+    "@types/node": "~22.19.11",
     "@types/vscode": "^1.109.0",
     "@vscode/vsce": "3.7.1",
     "typescript": "^5.9.3"
