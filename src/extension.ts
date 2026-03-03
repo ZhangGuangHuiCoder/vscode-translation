@@ -47,9 +47,10 @@ function getSelectedText() {
 async function updateStatus() {
   const selectedText = getSelectedText();
   if (!selectedText) return;
-  const showText = await netTranslate(selectedText);
-  status.text = "$(triangle-right) " + showText;
+  status.text = "$(pulse) " + selectedText;
   status.show();
+  const showText = await netTranslate(selectedText);
+  status.text = "$(library) " + showText;
 }
 
 /* 替换选中文本 */

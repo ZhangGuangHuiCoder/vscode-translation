@@ -1,7 +1,6 @@
 import { Memento, StatusBarAlignment, window, workspace } from "vscode";
 
 let globalState: Memento;
-const status = window.createStatusBarItem(StatusBarAlignment.Left);
 type BingToken = { key: string; token: string; time: number };
 const headers = new Headers();
 headers.append("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1");
@@ -60,8 +59,6 @@ async function netTranslate(str: string) {
   /** 执行网络翻译 */
   try {
     if (str.length < 1 || str.length > 50) return "";
-    status.text = "$(pulse) " + str;
-    status.show();
     const en2zh = /^[\u0000-\u00ff]+$/.test(str);
     console.log(en2zh ? "英文转中文" : "中文转英文", str);
     const engine = workspace.getConfiguration().get<string>("engine") || "tencent";
@@ -78,11 +75,8 @@ async function netTranslate(str: string) {
     translationCache[str] = { result, timestamp };
     return result;
   } catch {
-    status.text = "网络翻译异常";
     window.showErrorMessage("网络翻译异常");
     return Promise.reject("网络翻译异常");
-  } finally {
-    status.text = "$(library) " + str;
   }
 }
 const initGlobalState = (e: Memento) => (globalState = e);
