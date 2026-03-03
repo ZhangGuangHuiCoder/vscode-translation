@@ -50,11 +50,16 @@ async function tencent(en2zh: boolean, str: string) {
   const { auto_translation } = await rs.json();
   return auto_translation[0].trim();
 }
-/* 网络翻译 */
+/** 网络翻译 */
 const translationCache: Record<string, { result: string; timestamp: number }> = {};
 async function netTranslate(str: string) {
-  if (str.length < 1 || str.length > 50) return "";
+  /** 翻译结果缓存1分钟 */
+  const timestamp = Date.now();
+  const cacheItem = translationCache[str];
+  if (cacheItem && timestamp - cacheItem.timestamp < 60000) return cacheItem.result;
+  /** 执行网络翻译 */
   try {
+    if (str.length < 1 || str.length > 50) return "";
     status.text = "$(pulse) " + str;
     status.show();
     const en2zh = /^[\u0000-\u00ff]+$/.test(str);
@@ -64,10 +69,6 @@ async function netTranslate(str: string) {
     const fallback = engine === "tencent" ? bing : tencent;
     /** 驼峰转空格 */
     const tstr = str.replace(/([a-z])([A-Z])/g, "$1 $2");
-    /* 翻译结果缓存1分钟 */
-    const timestamp = Date.now();
-    const cacheItem = translationCache[str];
-    if (cacheItem && timestamp - cacheItem.timestamp < 60000) return cacheItem.result;
     let result = "";
     try {
       result = await primary(en2zh, tstr);
