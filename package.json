@@ -2,7 +2,7 @@
   "name": "translation-auto",
   "displayName": "翻译(中英互译)",
   "description": "自动翻译选中的文本，支持驼峰，下划线，常量命名",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "publisher": "ZhangGuangHuiCoder",
   "repository": {
     "type": "git",
