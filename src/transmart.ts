@@ -61,10 +61,12 @@ async function netTranslate(str: string) {
     const engine = workspace.getConfiguration().get<string>("engine") || "tencent";
     const primary = engine === "tencent" ? tencent : bing;
     const fallback = engine === "tencent" ? bing : tencent;
+    /** 驼峰转空格 */
+    const tstr = str.replace(/([a-z])([A-Z])/g, "$1 $2");
     try {
-      return await primary(en2zh, str);
+      return await primary(en2zh, tstr);
     } catch {
-      return await fallback(en2zh, str);
+      return await fallback(en2zh, tstr);
     }
   } catch {
     status.text = "网络翻译异常";

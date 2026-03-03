@@ -22,6 +22,7 @@ async function worldSplit(str: string) {
   const formatters: Record<string, () => string> = {
     小驼峰: () => words.map((v, i) => (i ? v[0].toUpperCase() + v.slice(1) : v)).join(""),
     大驼峰: () => words.map((v) => v[0].toUpperCase() + v.slice(1)).join(""),
+    下划线: () => words.join("_"),
     常量: () => words.map((v) => v.toUpperCase()).join("_"),
     仅翻译: () => str,
   };
