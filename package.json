@@ -1,0 +1,280 @@
+{
+  "name": "translation-auto",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "icon": "icon.png",
+  "version": "1.1.0",
+  "publisher": "ZhangGuangHuiCoder",
+  "license": "WTFPL",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "translate",
+    "translation",
+    "翻译",
+    "中英互译",
+    "camelCase",
+    "驼峰",
+    "命名",
+    "variable name"
+  ],
+  "homepage": "https://github.com/ZhangGuangHuiCoder/vscode-translation#readme",
+  "bugs": {
+    "url": "https://github.com/ZhangGuangHuiCoder/vscode-translation/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZhangGuangHuiCoder/vscode-translation.git"
+  },
+  "scripts": {
+    "watch": "tsc -watch -p .",
+    "build": "tsc -p . && vsce package"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "when": "editorHasSelection",
+        "command": "translation.translate",
+        "title": "%command.translate%"
+      },
+      {
+        "command": "translation.copy",
+        "title": "%command.copy%"
+      },
+      {
+        "command": "translation.replace",
+        "title": "%command.replace%"
+      },
+      {
+        "command": "translation.pickEngine",
+        "title": "%command.pickEngine%"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "translation.translate",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "translation.copy",
+          "when": "false"
+        },
+        {
+          "command": "translation.replace",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "translation.translate",
+        "key": "ctrl+n",
+        "mac": "cmd+n",
+        "when": "editorHasSelection"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "%config.title.engine%",
+        "properties": {
+          "translation.engine": {
+            "type": "string",
+            "enum": [
+              "race",
+              "bing",
+              "tencent",
+              "bilibili",
+              "custom"
+            ],
+            "default": "race",
+            "description": "%engine.desc%",
+            "enumDescriptions": [
+              "%engine.race%",
+              "%engine.bing%",
+              "%engine.tencent%",
+              "%engine.bilibili%",
+              "%engine.custom%"
+            ],
+            "enumItemLabels": [
+              "%engine.label.race%",
+              "%engine.label.bing%",
+              "%engine.label.tencent%",
+              "%engine.label.bilibili%",
+              "%engine.label.custom%"
+            ]
+          },
+          "translation.bilibiliModel": {
+            "type": "string",
+            "enum": [
+              "Index-Translate-2B",
+              "Index-Translate-9B",
+              "Index-Translate-35B-A3B"
+            ],
+            "enumDescriptions": [
+              "%model.fast%",
+              "%model.balanced%",
+              "%model.best%"
+            ],
+            "default": "Index-Translate-2B",
+            "description": "%bilibiliModel.desc%"
+          },
+          "translation.customApi": {
+            "type": "object",
+            "scope": "application",
+            "markdownDescription": "%customApi.desc%",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "%customApi.url%"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST"
+                ],
+                "default": "POST",
+                "description": "%customApi.method%"
+              },
+              "headers": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "%customApi.headers%"
+              },
+              "body": {
+                "type": "string",
+                "description": "%customApi.body%"
+              },
+              "resultPath": {
+                "type": "string",
+                "description": "%customApi.resultPath%"
+              },
+              "languages": {
+                "type": "object",
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "default": "en",
+                    "description": "%customApi.lang.en%"
+                  },
+                  "zh": {
+                    "type": "string",
+                    "default": "zh",
+                    "description": "%customApi.lang.zh%"
+                  }
+                },
+                "description": "%customApi.languages%"
+              }
+            },
+            "default": {}
+          },
+          "translation.maxLength": {
+            "type": "number",
+            "default": 120,
+            "minimum": 1,
+            "description": "%maxLength.desc%"
+          },
+          "translation.cacheSeconds": {
+            "type": "number",
+            "default": 60,
+            "minimum": 0,
+            "description": "%cacheSeconds.desc%"
+          }
+        }
+      },
+      {
+        "title": "%config.title.display%",
+        "properties": {
+          "translation.hover": {
+            "type": "boolean",
+            "default": true,
+            "description": "%hover.desc%"
+          },
+          "translation.selectionHover": {
+            "type": "boolean",
+            "default": true,
+            "description": "%selectionHover.desc%"
+          },
+          "translation.selectionHoverDelay": {
+            "type": "number",
+            "default": 400,
+            "minimum": 0,
+            "description": "%selectionHoverDelay.desc%"
+          },
+          "translation.showCopy": {
+            "type": "boolean",
+            "default": true,
+            "description": "%showCopy.desc%"
+          },
+          "translation.showReplace": {
+            "type": "boolean",
+            "default": true,
+            "description": "%showReplace.desc%"
+          },
+          "translation.statusBar": {
+            "type": "boolean",
+            "default": true,
+            "description": "%statusBar.desc%"
+          }
+        }
+      },
+      {
+        "title": "%config.title.styles%",
+        "properties": {
+          "translation.styleLowerCamel": {
+            "type": "boolean",
+            "default": true,
+            "description": "%styleLowerCamel.desc%"
+          },
+          "translation.styleUpperCamel": {
+            "type": "boolean",
+            "default": true,
+            "description": "%styleUpperCamel.desc%"
+          },
+          "translation.styleSnake": {
+            "type": "boolean",
+            "default": true,
+            "description": "%styleSnake.desc%"
+          },
+          "translation.styleConstant": {
+            "type": "boolean",
+            "default": true,
+            "description": "%styleConstant.desc%"
+          },
+          "translation.styleOriginal": {
+            "type": "boolean",
+            "default": true,
+            "description": "%styleOriginal.desc%"
+          }
+        }
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "~22.20.5",
+    "@types/vscode": "~1.85.0",
+    "@vscode/vsce": "~4.1.1",
+    "typescript": "~6.0.3"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "l10n": "./l10n"
+}

@@ -1,0 +1,18 @@
+{
+  "lowerCamelCase": "小驼峰",
+  "UpperCamelCase": "大驼峰",
+  "snake_case": "下划线",
+  "CONSTANT_CASE": "常量",
+  "Translation only": "仅翻译",
+  "Choose a variable name to replace the selection": "请选择要替换的变量名",
+  "Copy": "复制",
+  "Replace": "替换",
+  "Copied: {0}": "已复制: {0}",
+  "Translation request failed": "网络翻译异常",
+  "Race": "竞速",
+  "Bing": "必应",
+  "Tencent": "腾讯",
+  "Bilibili": "哔哩哔哩",
+  "Custom API": "自定义接口",
+  "Switch translation engine": "切换翻译引擎"
+}
