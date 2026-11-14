@@ -113,8 +113,7 @@ async function customTranslate(toChinese: boolean, text: string) {
 }
 
 /** 按配置的引擎翻译：race 同时请求取最快，其余先主后备 */
-async function requestTranslation(toChinese: boolean, text: string) {
-  const engine = getConfig<string>("engine", "race");
+export async function requestTranslation(toChinese: boolean, text: string, engine = getConfig<string>("engine", "race")) {
   if (engine === "race") {
     const nonEmpty = async (task: Promise<string>) => (await task) || Promise.reject("empty");
     /** 只在两个机器翻译（必应、腾讯）之间竞速 */

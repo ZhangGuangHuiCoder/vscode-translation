@@ -1,7 +1,8 @@
 {
-  "displayName": "Translation (EN ⇄ ZH)",
+  "displayName": "翻译(EN ⇄ ZH)",
   "description": "Auto-translate selected text and turn it into camelCase, snake_case or CONSTANT_CASE names",
   "command.translate": "Translate (EN ⇄ ZH)",
+  "command.translateFile": "Translate Document (EN ⇄ ZH)",
   "command.copy": "Copy Translation",
   "command.replace": "Replace with Translation",
   "engine.desc": "Translation engine",

@@ -14,5 +14,14 @@
   "Tencent": "腾讯",
   "Bilibili": "哔哩哔哩",
   "Custom API": "自定义接口",
-  "Switch translation engine": "切换翻译引擎"
+  "Switch translation engine": "切换翻译引擎",
+  "Nothing to translate": "没有可翻译的内容",
+  "Translating {0}": "正在翻译 {0}",
+  "{0} lines failed to translate and were kept as the original": "{0} 处翻译失败，已保留原文",
+  "Chinese": "中文",
+  "English": "英文",
+  "Recommended": "推荐",
+  "Translate the document into": "将文档翻译为",
+  "Engine: {0}": "引擎：{0}",
+  "Switch engine (this time only): {0}": "临时切换引擎（仅本次）：{0}"
 }

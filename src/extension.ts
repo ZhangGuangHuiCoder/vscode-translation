@@ -1,9 +1,11 @@
-import { commands, ConfigurationTarget, env, l10n, ExtensionContext, Hover, languages, MarkdownString, Position, Range, StatusBarAlignment, TextDocument, Uri, window, workspace, WorkspaceEdit } from "vscode";
-import { getConfig, getMaxLength, initState, translate } from "./translator";
+import { commands, ConfigurationTarget, env, l10n, ExtensionContext, Hover, languages, MarkdownString, Position, ProgressLocation, Range, StatusBarAlignment, TextDocument, ThemeIcon, Uri, ViewColumn, window, workspace, WorkspaceEdit } from "vscode";
+import { assembleDocument, collectTexts, detectToChinese, hasLetters, splitDocument } from "./document";
+import { getConfig, getMaxLength, initState, requestTranslation, translate } from "./translator";
 
 const COMMAND_TRANSLATE = "translation.translate";
 const COMMAND_COPY = "translation.copy";
 const COMMAND_REPLACE = "translation.replace";
+const COMMAND_TRANSLATE_FILE = "translation.translateFile";
 const COMMAND_PICK_ENGINE = "translation.pickEngine";
 const COMMAND_SET_ENGINE = "translation.setEngine";
 const COMMAND_CYCLE_ENGINE = "translation.cycleEngine";
@@ -53,11 +55,14 @@ const updateEngineButton = () => {
 };
 const setEngine = (engine: string) => workspace.getConfiguration("translation").update("engine", engine, ConfigurationTarget.Global);
 
+const nextEngine = (current: string) => {
+  const engines = getAvailableEngines();
+  return engines[(engines.indexOf(current) + 1) % engines.length];
+};
+
 /** 点击按钮：切换到下一个引擎 */
 async function cycleEngine() {
-  const engines = getAvailableEngines();
-  const index = engines.indexOf(getConfig("engine", "race"));
-  await setEngine(engines[(index + 1) % engines.length]);
+  await setEngine(nextEngine(getConfig("engine", "race")));
 }
 
 /** 弹出引擎列表，选中后写入用户设置 */
@@ -144,6 +149,98 @@ async function showTranslation() {
   await editor.edit((editBuilder) => editBuilder.replace(editor.selection, picked.label));
 }
 
+/** 同时进行的翻译请求数 */
+const FILE_CONCURRENCY = 5;
+
+/** 一步选择目标语言；标题里显示引擎，点右侧按钮可临时切换引擎（不改全局设置） */
+function pickTranslateOptions(detectedToChinese: boolean) {
+  return new Promise<{ toChinese: boolean; engine: string } | undefined>((resolve) => {
+    let engine = getConfig("engine", "race");
+    let result: { toChinese: boolean; engine: string } | undefined;
+    const quickPick = window.createQuickPick<{ label: string; description?: string; toChinese: boolean }>();
+    const chinese = { label: l10n.t("Chinese"), toChinese: true };
+    const english = { label: l10n.t("English"), toChinese: false };
+    quickPick.items = detectedToChinese ? [{ ...chinese, description: l10n.t("Recommended") }, english] : [{ ...english, description: l10n.t("Recommended") }, chinese];
+    const refresh = () => {
+      quickPick.title = l10n.t("Translate the document into") + "  ·  " + l10n.t("Engine: {0}", getEngineLabel(engine));
+      quickPick.buttons = [{ iconPath: new ThemeIcon("arrow-swap"), tooltip: l10n.t("Switch engine (this time only): {0}", getEngineLabel(engine)) }];
+    };
+    refresh();
+    quickPick.onDidTriggerButton(() => {
+      engine = nextEngine(engine);
+      refresh();
+    });
+    quickPick.onDidAccept(() => {
+      const picked = quickPick.selectedItems[0];
+      if (picked) result = { toChinese: picked.toChinese, engine };
+      quickPick.hide();
+    });
+    quickPick.onDidHide(() => {
+      quickPick.dispose();
+      resolve(result);
+    });
+    quickPick.show();
+  });
+}
+
+/** 在扩展名前加后缀得到译文路径；已存在则依次加 -1、-2… 避免覆盖 */
+async function getFreeUri(uri: Uri, suffix: string) {
+  for (let index = 0; ; index++) {
+    const tag = suffix + (index ? `-${index}` : "");
+    const candidate = uri.with({ path: uri.path.replace(/(\.[^./]+)?$/, (extension) => tag + extension) });
+    try {
+      await workspace.fs.stat(candidate);
+    } catch {
+      return candidate;
+    }
+  }
+}
+
+/** 右键翻译整个文档：译文保存为同目录下的新文件并在旁边打开 */
+async function translateFile(resource?: Uri) {
+  const uri = resource ?? window.activeTextEditor?.document.uri;
+  if (!uri) return;
+  const content = new TextDecoder().decode(await workspace.fs.readFile(uri));
+  if (!hasLetters(content)) {
+    window.showInformationMessage(l10n.t("Nothing to translate"));
+    return;
+  }
+  const choice = await pickTranslateOptions(detectToChinese(content));
+  if (!choice) return;
+  const { toChinese, engine } = choice;
+  const { segments, eol } = splitDocument(content, toChinese);
+
+  const texts = collectTexts(segments);
+  const translated = new Map<string, string>();
+  const title = l10n.t("Translating {0}", uri.path.split("/").pop() ?? "");
+  const cancelled = await window.withProgress({ location: ProgressLocation.Notification, title, cancellable: true }, async (progress, token) => {
+    let next = 0;
+    let done = 0;
+    const worker = async () => {
+      while (!token.isCancellationRequested && next < texts.length) {
+        const text = texts[next++];
+        try {
+          translated.set(text, (await requestTranslation(toChinese, text, engine)).trim());
+        } catch {}
+        progress.report({ increment: 100 / texts.length, message: `${++done}/${texts.length}` });
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(FILE_CONCURRENCY, texts.length) }, worker));
+    return token.isCancellationRequested;
+  });
+  if (cancelled) return;
+  if (!translated.size) {
+    window.showErrorMessage(l10n.t("Translation request failed"));
+    return;
+  }
+
+  const outputUri = await getFreeUri(uri, toChinese ? ".zh-CN" : ".en");
+  await workspace.fs.writeFile(outputUri, new TextEncoder().encode(assembleDocument(segments, translated, eol)));
+  await window.showTextDocument(outputUri, { viewColumn: ViewColumn.Beside, preview: false });
+  const failed = texts.length - translated.size;
+  if (failed) window.showWarningMessage(l10n.t("{0} lines failed to translate and were kept as the original", failed));
+}
+
 /** 悬停翻译：有选区时翻译选区，否则翻译光标下的单词 */
 async function provideHover(document: TextDocument, position: Position) {
   if (!getConfig("hover", true)) return;
@@ -188,7 +285,7 @@ const showSelectionHover = debounce(() => {
   const editor = window.activeTextEditor;
   if (!editor || editor.selection.isEmpty || !getConfig("hover", true) || !getConfig("selectionHover", true)) return;
   const text = editor.document.getText(editor.selection).trim();
-  if (text.length > getMaxLength() || !/[a-zA-Z一-龥]/.test(text)) return; // 过长或不含文字不弹出
+  if (text.length > getMaxLength() || !hasLetters(text)) return; // 过长或不含文字不弹出
   commands.executeCommand("editor.action.showHover");
 }, () => getConfig("selectionHoverDelay", 400));
 
@@ -198,6 +295,7 @@ export function activate(context: ExtensionContext) {
   engineButton.show();
   context.subscriptions.push(
     commands.registerCommand(COMMAND_TRANSLATE, debounce(showTranslation, 300)),
+    commands.registerCommand(COMMAND_TRANSLATE_FILE, translateFile),
     commands.registerCommand(COMMAND_PICK_ENGINE, pickEngine),
     commands.registerCommand(COMMAND_SET_ENGINE, setEngine),
     commands.registerCommand(COMMAND_CYCLE_ENGINE, cycleEngine),

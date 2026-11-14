@@ -3,7 +3,7 @@
   "displayName": "%displayName%",
   "description": "%description%",
   "icon": "icon.png",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "ZhangGuangHuiCoder",
   "license": "WTFPL",
   "categories": [
@@ -46,6 +46,10 @@
         "title": "%command.translate%"
       },
       {
+        "command": "translation.translateFile",
+        "title": "%command.translateFile%"
+      },
+      {
         "command": "translation.copy",
         "title": "%command.copy%"
       },
@@ -59,6 +63,20 @@
       }
     ],
     "menus": {
+      "explorer/context": [
+        {
+          "when": "!explorerResourceIsFolder && resourceExtname =~ /\\.(md|markdown|mdx|txt|rst)$/i",
+          "command": "translation.translateFile",
+          "group": "navigation@100"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "when": "resourceExtname =~ /\\.(md|markdown|mdx|txt|rst)$/i",
+          "command": "translation.translateFile",
+          "group": "1_translation"
+        }
+      ],
       "editor/context": [
         {
           "when": "editorHasSelection",
@@ -67,6 +85,10 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "translation.translateFile",
+          "when": "resourceExtname =~ /\\.(md|markdown|mdx|txt|rst)$/i"
+        },
         {
           "command": "translation.copy",
           "when": "false"

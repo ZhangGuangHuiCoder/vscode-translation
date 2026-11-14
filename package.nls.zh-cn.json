@@ -2,6 +2,7 @@
   "displayName": "翻译(中英互译)",
   "description": "自动翻译选中的文本，支持驼峰，下划线，常量命名",
   "command.translate": "中英互译",
+  "command.translateFile": "翻译文档（中英互译）",
   "command.copy": "复制翻译结果",
   "command.replace": "替换为翻译结果",
   "engine.desc": "翻译引擎",
